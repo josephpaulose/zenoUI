@@ -7,9 +7,13 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-required-333333)](https://developer.apple.com/macos/)
 
-Zeno UI is a fork of [MLXUI](https://github.com/Misfits-Rebels-Outcasts/MLXUI), under its
-original MIT license (see `LICENSE`).
-<!-- TODO: add a Mac App Store / download badge once Zeno UI has its own listing -->
+Zeno UI is a fork of [MLXUI](https://github.com/Misfits-Rebels-Outcasts/MLXUI) — originally
+built by another developer and distributed on the Mac App Store — under its original MIT
+license (see `LICENSE`). This fork adds Ollama integration, RIFE frame interpolation, and
+other changes documented below, and **is not distributed on the Mac App Store** — it ships
+as a notarized Direct download (see "Two builds, one codebase"). The App Store-sandboxed
+target still lives in the project for architectural parity (see `CLAUDE.md`) but isn't the
+shipping path for this fork.
 
 Zeno UI is the **SwiftUI user interface layer for MLX models** — a native macOS app built on
 [`mlx-swift`](https://github.com/ml-explore/mlx-swift) that lets you browse, install, and
@@ -90,6 +94,42 @@ install in the catalog are the same models your workflows use — no separate se
 
 <!-- Items marked *(hidden in-app)* are built but switched off behind an in-app flag right
      now — pruning candidates if you don't want to announce them before they're switched on. -->
+
+### RIFE 4.25 — frame interpolation, the smallest model in the catalog
+
+Pick two frames, choose a timestep, get the blended frame between them. RIFE 4.25 is a
+Swift/MLX port of `xocialize/rife-mlx` (itself an MLX port of Practical-RIFE, MIT): a
+5-block coarse-to-fine optical-flow network (`IFNet`) that backward-warps both frames and
+composites them through a learned blend mask. The checkpoint is ~23 MB — by far the
+smallest model Zeno UI ships — so it loads and runs in a fraction of a second. Browse + Run
+UI now; this app covers the two-still-image case, not the upstream CLI's multi-frame video
+mode. AI Workflows wiring is not done yet — see `CLAUDE.md`'s Mission section.
+
+### Ollama — chat with models you're already serving locally
+
+A new **Local Servers** section in the sidebar talks to a local `ollama` server
+(`127.0.0.1:11434`) if one is running, listing whatever you've already `ollama pull`ed and
+giving each a lightweight streaming-chat view. Ollama's own models are discovered live —
+they're never added to `browser.json`, never downloaded by this app, and don't go through
+the usual model-module system, because Ollama already owns and serves those weights
+itself. They also surface as cards in Browse's Infrastructure section, and `llama3.2` ships
+as a curated AI Workflows provider (`Generate` and `Decide` tasks, `egress: "lan"` — the
+prompt stays on your own machine, going only to your own Ollama server).
+
+### Import Local Copy — adopt a model you already downloaded elsewhere
+
+Already pulled a model's weights with `huggingface-cli`, `git-lfs`, or some other tool? The
+model's detail page now has an **Import Local Copy** button that points at that folder (the
+standard `~/.cache/huggingface/hub/models--org--name` cache layout, or a snapshot folder
+directly) and adopts it into Zeno UI's own store — no re-download, no second copy of multi-GB
+weights sitting around.
+
+### Suggest a Flow — describe a goal, get the matching flow
+
+Type what you're trying to do into the new card at the top of the AI Workflows gallery, and
+an on-device Apple Intelligence model either opens the existing flow (gallery or your own)
+that best matches, or starts drafting a new one when nothing genuinely fits. Reuses the same
+on-device executor path AI Workflows rows already call — no new model integration.
 
 ### Laya 0.4B — a decision model, not a chat model
 
@@ -257,6 +297,8 @@ Prism ML's [Ternary-Bonsai-27B](https://huggingface.co/prism-ml/Ternary-Bonsai-2
   - Image generation (Flux, SDXL-Turbo) → text prompt + on-device generated image
   - Music generation (MusicGen) → text description + on-device generated WAV
   - Decision (Laya) → typed question + confidence-scored answer, no generated text
+  - Frame interpolation (RIFE 4.25) → two still frames + timestep → blended in-between frame
+  - Ollama (local server) → lightweight streaming chat with whatever you've already pulled
 - **Pipeline runner** — chain models together (transcribe → summarize → speak) in a
   single workflow
 - **Command palette (⌘K)** — find and run any model instantly
@@ -267,9 +309,9 @@ Prism ML's [Ternary-Bonsai-27B](https://huggingface.co/prism-ml/Ternary-Bonsai-2
 
 ## Supported Models
 
-### browser.json — MVP catalog (30 models)
+### browser.json — MVP catalog (31 models)
 
-The app ships `browser.json`, a hand-curated set of 30 models across 8 categories.
+The app ships `browser.json`, a hand-curated set of 31 models across 9 categories.
 Every model listed here is downloadable and has a working Run UI.
 
 | Category | Models | Sizes |
@@ -283,9 +325,14 @@ Every model listed here is downloadable and has a working Run UI.
 | **Image Generation** (2) | FLUX.1-Lite-8B, **SDXL-Turbo** | 3.5B – 8B |
 | **Music Generation** (1) | **MusicGen-small** | 615M (float32, ~2.5 GB) |
 | **Decision** (1) | **Laya 0.4B** | 0.4B |
+| **Frame Interpolation** (1) | **RIFE 4.25** | 0.006B (~23 MB) |
 
 The full `browser.json` catalog tracks **~435 models** from mlx-community. New models
 and Run UIs are added with every release.
+
+**Not in this table:** models served by a local **Ollama** install. They're discovered live
+from `127.0.0.1:11434`, not shipped in `browser.json`, and show up in their own sidebar
+section and in Browse's Infrastructure category — see "What's New" above.
 
 ### Engine coverage
 
@@ -304,8 +351,11 @@ and Run UIs are added with every release.
 | Image | Diffusion (SDXL-Turbo) | ✅ | ✅ | ✅ | SDXL-Turbo (native MLX) |
 | Audio | Music generation (MusicGen) | ✅ | ✅ | ✅ | MusicGen (native MLX) |
 | Text | Decision / classification (Laya) | ✅ | ✅ | ✅ | Laya (native MLX ModernBERT + decision head) |
+| Image | Frame interpolation (RIFE) | ✅ | ✅ | ✅ | RIFE (native MLX, Swift port of Practical-RIFE 4.25) |
+| Text | Chat via local Ollama server | ✅¹ | — | ✅ | Ollama's own server (`127.0.0.1:11434`) |
 
-✅ = built &emsp; ⬜ = available for contribution
+✅ = built &emsp; ⬜ = available for contribution &emsp; ¹ discovered live, not a `browser.json`
+entry — nothing to install, Ollama already serves it
 
 ---
 
@@ -452,6 +502,16 @@ Every model in the catalog should eventually have a working Run button.
 - [x] AI Workflows: output viewer (Quick Look, Open in app, Export a Copy), workspace-flow
       auto-resume after install, Flow inspector tab, Human Input/Ask Human polish, Row-text
       Template editor, and a concurrency-safety pass across FlowKit/Core/Modules
+- [x] RIFE 4.25 Run UI — two-frame + timestep interpolation; native MLX Swift port of
+      Practical-RIFE's `IFNet`, ~23 MB, the smallest model in the catalog (AI Workflows
+      wiring still open)
+- [x] Ollama integration — live discovery of a local Ollama server, its own sidebar
+      section + Browse card + streaming chat view, and a curated AI Workflows provider
+      manifest (`llama3.2`, `egress: "lan"`)
+- [x] Import Local Copy — adopt a model already downloaded via `huggingface-cli`/git-lfs
+      from its HF cache folder, no re-download
+- [x] Suggest a Flow — type a goal in the AI Workflows gallery and an on-device model opens
+      the best-matching flow or starts drafting a new one
 
 ### In progress
 - [ ] Visual pipeline builder UI

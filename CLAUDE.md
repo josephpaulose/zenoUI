@@ -9,7 +9,12 @@ Guidance for working in this repository.
 1. **Browse, compare, install and run local MLX models** — a bundled catalog sourced from
    HuggingFace, filtered/sorted by hardware fit (RAM, chip bandwidth), installed by downloading
    files directly from HF, and run locally via MLX (LLM chat, ASR, TTS, VLM, OCR, embeddings,
-   diffusion, segmentation, video, upscale).
+   diffusion, segmentation, video, upscale, frame interpolation). A second, parallel path —
+   **Ollama** (`Modules/Ollama/`) — talks to a local `ollama` server over `127.0.0.1:11434`
+   instead: models there are discovered live, never added to `browser.json`, and deliberately
+   never routed through `ModelRegistry`/`ModelModule` (see `OllamaModelInfo`'s header). It gets
+   its own sidebar destination, its own card in Browse's Infrastructure section, and its own
+   chat view — don't expect it to show up where an MLX model would.
 2. **Run those models as workflows** — **CAT Flow**, reached at *Automate → AI Workflows*. A
    `.cat` file is a numbered list of `Asset → Transform → Asset` rows that a runtime executes top
    to bottom. `MLXUI/FlowKit/` is a Swift port of the `catflow-mlx` Python runtime.
@@ -23,8 +28,20 @@ can run — see "CAT Flow" below.
 
   | Target | Product | Distribution | Sandbox | Flag |
   |---|---|---|---|---|
-  | `MLXUI` | "AI Browser" | Mac App Store | **yes** — app-sandbox, network.client, user-selected read-write | `APPSTORE_BUILD` |
-  | `MLXUI-Direct` | "AI Browser Pro" | Developer ID + notarized | **no** — Hardened Runtime only | `DIRECT_BUILD` |
+  | `MLXUI` | "Zeno UI" (`in.net.zeno.zenoui`) | Mac App Store | **yes** — app-sandbox, network.client, user-selected read-write | `APPSTORE_BUILD` |
+  | `MLXUI-Direct` | "Zeno UI Pro" (`in.net.zeno.zenoui-pro`) | Developer ID + notarized | **no** — Hardened Runtime only | `DIRECT_BUILD` |
+
+  Renamed from "AI Browser" / "AI Browser Pro" (`net.connectcode.mlxui` / `-pro`) in the Zeno UI
+  rebrand; the on-disk storage folder name moved with it — see "Install & storage" below. The
+  Keychain service (`com.ai-browser`) and the HF download `User-Agent` string did **not** rename —
+  check `InstallManager.swift` before assuming either followed suit.
+
+  **This fork is MIT-licensed** from the original MLXUI (a different developer's project,
+  distributed on the Mac App Store) and **is not submitted to the Mac App Store** — the owner's
+  plan is Direct-only distribution. The `MLXUI` (App Store) target stays in the codebase for the
+  sandboxed/capability-gating architecture it exercises, not because it's a real release channel
+  for this fork; don't assume App Store submission steps (`RSI/RM-6-privacy-disclosure.md`, the
+  nutrition-label work) are live work here unless the owner says the plan changed.
 
   The Direct edition compiles in the shell / filesystem / subprocess agent tools; the App Store
   target never has those files in its membership, so the sandboxed binary cannot contain them.
@@ -62,7 +79,10 @@ installed and actually run. That now means two things, both required:
 - **Reachability from AI Workflows** — a `CatalogBridge` row, a curated manifest under
   `Resources/CatFlow/models/`, and a task the executor genuinely serves. This is step **AM-W** of
   `RSI/prompts/add-model.md` (the `/add-mlxui` intake), and it is the step most often forgotten:
-  a model can install and run from Browse while every `.cat` row naming it refuses.
+  a model can install and run from Browse while every `.cat` row naming it refuses. **RIFE is the
+  live example as of this writing** — `RunnerKind.interpolate` exists, `RIFEModule` is registered,
+  Browse + Run work, but `RIFEStage.run` unconditionally throws and no `Resources/CatFlow/models/`
+  manifest or `CatalogBridge` entry exists for it, so AI Workflows cannot reach it yet.
 
 When an architecture has no MLX runner, it's flagged in `Core/ModelSupport.swift` and queued for an
 iterative port rather than left silently broken.
@@ -138,8 +158,10 @@ Vendor ─── PaddleOCRVL (local SPM package)
 
 **Modules** (`MLXUI/Modules/`) — Chat, VLM, OCR, DotsOCR, DeepSeekOCR, PaddleOCR, Whisper,
 MLXWhisper, Voxtral, MLXAudioTTS, Kokoro, Embedding, Flux, StableDiffusion, MusicGen,
-SegmentAnything, WanVideo, SeedVR2, Tools, Demo. Each registers itself in `App/ModelModules.swift`;
-`ModelRegistry.bestModule(for:)` is what resolves a `ModelEntry` to a runner.
+SegmentAnything, WanVideo, SeedVR2, RIFE, Tools, Demo. Each registers itself in
+`App/ModelModules.swift`; `ModelRegistry.bestModule(for:)` is what resolves a `ModelEntry` to a
+runner. `Modules/Ollama/` is the one exception — it has no `ModelModule` conformance and is not
+in `App/ModelModules.swift`; see "What this is" above.
 
 ### Key files (`MLXUI/`)
 
@@ -151,8 +173,8 @@ SegmentAnything, WanVideo, SeedVR2, Tools, Demo. Each registers itself in `App/M
 | `State/InstallManager.swift` | HF download engine. File resolution via `/api/models/{id}` siblings, sequential download w/ progress delegate, sharded-model detection, verify, atomic move, `installed.json` registry, Keychain token. |
 | `Services/ModelRunner.swift` | Runs models locally: real `MLXLLM`/`MLXLMCommon` inference, streaming chat, agent sessions with tool-call approval (`PendingApproval`). |
 | `Core/ModelRegistry.swift` | Module registry + `bestModule(for:)` — the resolution every run path goes through. |
-| `Core/ModelStore.swift` | The **one** place `Application Support/AI Browser/…` paths are built. Never rebuild them by hand. |
-| `Core/RunnerKind.swift` | `modelType` → `RunnerKind`, plus the known catalog mislabels. **The only place dispatch decisions are made.** |
+| `Core/ModelStore.swift` | The **one** place `Application Support/Zeno UI/…` paths are built. Never rebuild them by hand. |
+| `Core/RunnerKind.swiftif all the chages are done to ` | `modelType` → `RunnerKind`, plus the known catalog mislabels. **The only place dispatch decisions are made.** |
 | `Core/StageFactory.swift` | `StageConfig` (the per-run settings a stage receives) + install/RAM gating before any engine loads. |
 | `Core/ModelSupport.swift` | Architectures with no MLX runner yet, keyed on id fragments. Remove an entry when it's ported. |
 | `Models/ModelEntry.swift` | Core model struct + `ModelType`, `ModelSource`, `ModelVariant`, `ModelBenchmarks`; `scaledSpeed(bandwidthGBps:)`, `bestVariant`, `qualityScore`. |
@@ -225,8 +247,9 @@ You normally edit Swift here, not the catalog; when you do edit it, decode must 
 
 ## Install & storage
 
-Files land under `~/Library/Application Support/AI Browser/` (both editions — the Direct build is
-un-sandboxed, so the path is the same, not a container). Built **only** via `Core/ModelStore.swift`:
+Files land under `~/Library/Application Support/Zeno UI/` (both editions — the Direct build is
+un-sandboxed, so the path is the same, not a container; folder renamed from `AI Browser` in the
+Zeno UI rebrand — `ModelStore.folderName`). Built **only** via `Core/ModelStore.swift`:
 
 ```
 installed.json            registry (version + per-model metadata)
