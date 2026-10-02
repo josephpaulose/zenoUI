@@ -225,6 +225,11 @@ struct ModelDetailView: View {
                         Label("Install", systemImage: "arrow.down.circle").frame(minWidth: 120)
                     }
                     .buttonStyle(.borderedProminent)
+                    Button { appState.presentImportLocalPanel(for: model) } label: {
+                        Label("Import Local Copy", systemImage: "tray.and.arrow.down")
+                    }
+                    .buttonStyle(.bordered)
+                    .help("Already downloaded this model with another tool? Point at its Hugging Face cache folder to use it here without re-downloading.")
                 }
             }
             Spacer(minLength: 0)

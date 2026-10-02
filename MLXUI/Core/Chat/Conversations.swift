@@ -4,7 +4,7 @@
 //
 //  A `Conversation` is a persisted chat transcript for one model: the renderable items
 //  (text bubbles + tool cards) plus identity and ordering metadata. `ConversationStore`
-//  keeps one JSON file per conversation under `Application Support/AI Browser/conversations/`
+//  keeps one JSON file per conversation under `Application Support/Zeno UI/conversations/`
 //  so chats survive relaunches in both editions (path via `ModelStore`).
 //
 //  The transcript is the UI's record; the model's memory is rebuilt per send by mapping the
@@ -122,7 +122,7 @@ struct Conversation: Identifiable, Codable, Sendable, Equatable {
 
 /// Disk persistence: one `{uuid}.json` per conversation.
 nonisolated enum ConversationStore {
-    /// `…/Application Support/AI Browser/conversations`.
+    /// `…/Application Support/Zeno UI/conversations`.
     static func defaultDirectory() -> URL {
         ModelStore.shared.baseDirectory.appendingPathComponent(
             "conversations", isDirectory: true)

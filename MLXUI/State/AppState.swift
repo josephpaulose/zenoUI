@@ -157,6 +157,11 @@ final class AppState { //appstatecomeback
     // Non-nil presents the registry-driven run sheet (e.g. Whisper ASR) for this model.
     var asrRunModel: ModelEntry?
 
+    /// The "Ollama" sidebar destination's live state (discovered models, reachability,
+    /// which one's chat sheet is open) — one line here rather than four more stored
+    /// properties on this already-large hub. See `OllamaCatalogState`.
+    var ollama = OllamaCatalogState()
+
     // Comparison
     var comparisonSet: [ModelEntry] = []
 
@@ -484,6 +489,10 @@ final class AppState { //appstatecomeback
             // second pass is a no-op for every card that was already resolved (MoC-5-3).
             loadInstalledModels()
             loadFilters()
+            // Ollama's model list is discovered live, not shipped in browser.json — kick off
+            // a background probe so the sidebar's "Ollama" row has an answer by the time the
+            // user clicks it. Absence of a server is not an error (`OllamaCatalogState`).
+            Task { await ollama.refresh() }
         } catch let DecodingError.keyNotFound(key, context) {
             let path = context.codingPath.map { $0.stringValue }.joined(separator: " → ")
             loadError = "Missing key '\(key.stringValue)' at \(path)"
@@ -551,6 +560,33 @@ final class AppState { //appstatecomeback
 
     func cancelInstall(_ model: ModelEntry) {
         installManager.cancel(model)
+    }
+
+    /// Lets the user adopt a copy of `model` they already downloaded with another tool
+    /// (`huggingface-cli`, git-lfs, …) instead of re-downloading it. Suggests the standard
+    /// HF cache location as the panel's starting folder when it exists, but any folder
+    /// works — `InstallManager.importLocal` resolves a `models--org--name` cache entry down
+    /// to its newest snapshot, or takes the picked folder as-is.
+    func presentImportLocalPanel(for model: ModelEntry) {
+        let panel = NSOpenPanel()
+        panel.title = "Import \(model.displayName)"
+        panel.message = "Choose this model's Hugging Face cache folder (models--org--name) or its snapshot folder."
+        panel.prompt = "Import"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        let cacheRoot = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".cache/huggingface/hub", isDirectory: true)
+        if FileManager.default.fileExists(atPath: cacheRoot.path) {
+            panel.directoryURL = cacheRoot
+        }
+        panel.begin { [weak self] response in
+            guard response == .OK, let self, let url = panel.url else { return }
+            self.installManager.importLocal(model, from: url) { [weak self] modelId in
+                self?.installedModelIDs.insert(modelId)
+                self?.saveInstalledModels()
+            }
+        }
     }
 
     /// MoC-5-2: reference-counted — `installManager.uninstall` derives whether another
@@ -701,6 +737,10 @@ enum SidebarItem: Hashable {
     case browse(String)
     case overview
     case aiWorkflows
+    /// The "Ollama" destination — locally-served models discovered live from
+    /// `OllamaCatalogState`, never a `browse(String)` catalog section (see
+    /// `OllamaModelInfo`'s header for why this doesn't reuse the `browser.json` world).
+    case ollama
     var isHome: Bool { if case .home = self { return true }; return false }
 }
 

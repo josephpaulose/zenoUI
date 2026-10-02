@@ -1,11 +1,11 @@
 // AppStore.xcconfig
 // Mac App Store edition: sandboxed, no shell capability.
-// Target: MLXUI          Product: "AI Browser.app"
+// Target: MLXUI          Product: "Zeno UI.app"
 
 #include "Shared.xcconfig"
 
-PRODUCT_NAME = MLXUI
-PRODUCT_BUNDLE_IDENTIFIER = net.connectcode.mlxui
+PRODUCT_NAME = Zeno UI
+PRODUCT_BUNDLE_IDENTIFIER = in.net.zeno.zenoui
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 
 // ── Sandbox ──

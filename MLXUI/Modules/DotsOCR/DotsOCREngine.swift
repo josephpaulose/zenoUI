@@ -17,7 +17,7 @@ enum DotsOCREngine {
     /// large scans. ~1 MP keeps the vision-token count safe while staying legible (mirrors `VLMEngine`).
     nonisolated static let maxInputPixels = 1_048_576
 
-    /// Installed-model directory (`Application Support/AI Browser/models/{id}`), like `VLMEngine`.
+    /// Installed-model directory (`Application Support/Zeno UI/models/{id}`), like `VLMEngine`.
     nonisolated static func installedModelDirectory(id: String) -> URL {
         ModelStore.shared.directory(forModelID: id)
     }

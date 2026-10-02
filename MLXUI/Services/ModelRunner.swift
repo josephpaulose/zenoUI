@@ -430,6 +430,10 @@ final class ModelRunner {
             showUnsupported("Image segmentation", model)
         case .upscale:
             showUnsupported("Image upscaling", model)
+        case .interpolate:
+            // Dead once RIFESDK is registered (the registry check ahead of this entry
+            // point claims every .interpolate model) — same situation as .upscale above.
+            showUnsupported("Frame interpolation", model)
         case .rerank:
             // Dead once RerankSDK is registered (MoC-4-3, RSI/DelegateMoCBacklog.md):
             // AppState.runModel(_:) checks the registry before ever calling here, and

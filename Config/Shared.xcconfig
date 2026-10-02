@@ -22,7 +22,9 @@ MARKETING_VERSION = 0.1
 CURRENT_PROJECT_VERSION = 2
 
 // ── Signing (edition files set the certificate + entitlements) ──
-DEVELOPMENT_TEAM = B93L2R82PL
+// No DEVELOPMENT_TEAM pinned here on purpose — CODE_SIGN_STYLE = Automatic lets
+// Xcode resolve the team from whichever Apple ID is signed into this Mac's
+// Accounts, so the project isn't tied to one hardcoded team across machines.
 CODE_SIGN_STYLE = Automatic
 ENABLE_HARDENED_RUNTIME = YES
 

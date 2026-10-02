@@ -55,8 +55,10 @@ struct LLMEngineThinkingSuppressionTests {
     /// sandbox containers and the un-sandboxed path.
     private static func installedQwen3Dir() -> URL? {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let rel = "Application Support/AI Browser/models/mlx-community--Qwen3-8B-4bit"
+        let rel = "Application Support/Zeno UI/models/mlx-community--Qwen3-8B-4bit"
         return [
+            home.appending(path: "Library/Containers/in.net.zeno.zenoui/Data/Library/\(rel)"),
+            // Legacy identities, kept as fallbacks for a dev machine with an older install.
             home.appending(path: "Library/Containers/net.connectcode.mlxui/Data/Library/\(rel)"),
             home.appending(path: "Library/Containers/ConnectCode.PipelineStudio/Data/Library/\(rel)"),
             home.appending(path: "Library/\(rel)"),

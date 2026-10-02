@@ -23,7 +23,7 @@ enum VoxtralEngine {
     }
 
     /// The installed-model directory for a catalog id, mirroring `InstallManager`'s layout
-    /// (`Application Support/AI Browser/models/{id}`).
+    /// (`Application Support/Zeno UI/models/{id}`).
     nonisolated static func installedModelDirectory(id: String) -> URL {
         ModelStore.shared.directory(forModelID: id)
     }

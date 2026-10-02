@@ -95,8 +95,10 @@ import MLXLMCommon
     /// sandbox containers and the un-sandboxed path (see `RSI/journal/2026-228`).
     private static func installedGLMOCRDir() -> URL? {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let rel = "Application Support/AI Browser/models/mlx-community--GLM-OCR-4bit"
+        let rel = "Application Support/Zeno UI/models/mlx-community--GLM-OCR-4bit"
         let candidates = [
+            home.appending(path: "Library/Containers/in.net.zeno.zenoui/Data/Library/\(rel)"),
+            // Legacy identities, kept as fallbacks for a dev machine with an older install.
             home.appending(path: "Library/Containers/net.connectcode.mlxui/Data/Library/\(rel)"),
             home.appending(path: "Library/Containers/ConnectCode.PipelineStudio/Data/Library/\(rel)"),
             home.appending(path: "Library/\(rel)"),

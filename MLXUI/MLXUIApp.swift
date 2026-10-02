@@ -58,6 +58,8 @@ struct MLXUIApp: App {
                                     OverviewView()
                                 } else if case .aiWorkflows = appState.selectedSection, !AppState.hideAutomate {
                                     FlowGalleryView()
+                                } else if case .ollama = appState.selectedSection {
+                                    OllamaListView()
                                 } else if let opened = appState.openedCatFlow {
                                     OpenedFlowView(opened: opened)
                                         .id(opened.url.path)
@@ -91,7 +93,8 @@ struct MLXUIApp: App {
                                                    document: target.document,
                                                    savedText: target.savedText,
                                                    workspace: target.workspace,
-                                                   fileURL: target.fileURL)
+                                                   fileURL: target.fileURL,
+                                                   seedTaskName: target.seedTaskName)
                                 case .workspace(let ws):
                                     // CFM-R17-3: a workspace page — the flows in it, its
                                     // shared files, Reveal in Finder on the shared directory.
@@ -127,6 +130,12 @@ struct MLXUIApp: App {
                     }
                 }
                 .environment(appState)   // B1 re-inject
+            }
+            // The Ollama chat sheet — parallel to the two run sheets above, but for a
+            // locally-served (not `browser.json`) model. See `OllamaCatalogState.runModel`.
+            .sheet(item: $appState.ollama.runModel) { model in
+                OllamaRunChatView(model: model)
+                    .environment(appState)   // B1 re-inject
             }
             .alert("Couldn't Open This Flow", isPresented: Binding(
                 get: { appState.openCatFlowError != nil },
@@ -179,7 +188,11 @@ struct MLXUIApp: App {
             .onChange(of: appState.filterSource) { _, _ in appState.saveFilters() }
             .onChange(of: appState.sortOrder) { _, _ in appState.saveFilters() }
         }
-        .windowResizability(.contentSize)
+        // .contentMinSize (not .contentSize): the latter also imposes a content-derived
+        // *maximum* size, which conflicts with native fullscreen forcing the window to the
+        // screen's size — the window's fullscreen transition gets stuck and stops responding
+        // to Close/Quit until forced out of fullscreen.
+        .windowResizability(.contentMinSize)
         .defaultSize(width: 1400, height: 900)
         .commands {
             CommandGroup(replacing: .newItem) {
@@ -195,11 +208,8 @@ struct MLXUIApp: App {
                 .keyboardShortcut("k", modifiers: .command)
             }
             CommandGroup(replacing: .help) {
-                Link("AI Browser Help", destination: URL(string: "https://connectcode.net/mlxui_local_llm_ai_browser.html")!)
-                Link("AI Workflows (mlx-workflow)", destination: URL(string: "https://www.connectcode.net/mlx-workflow.html")!)
-                /*
-                Link("Help build MLXUI", destination: URL(string: "https://www.connectcode.net/mlxui_local_llm_ai_browser.html")!)
-                 */
+                Link("Zeno UI on GitHub", destination: URL(string: "https://github.com/josephpaulose/MLXUI")!)
+                Link("Report an Issue", destination: URL(string: "https://github.com/josephpaulose/MLXUI/issues")!)
             }
         }
 

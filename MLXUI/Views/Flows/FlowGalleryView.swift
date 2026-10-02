@@ -14,10 +14,16 @@ struct FlowGalleryView: View {
     /// CFM-R17-3: the workspace badge awaiting a Remove confirmation.
     @State private var workspacePendingRemoval: WorkspaceStore.Workspace?
 
+    /// "Suggest a Flow" — the goal typed into the on-device-matching card.
+    @State private var suggestQuery = ""
+    @State private var isSuggesting = false
+    @State private var suggestError: String?
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
+                suggestFlowSection
                 // CFM-R12-1: the user's own saved flows. The New Flow badge lives here too —
                 // it is a user action, not a bundled flow. `disableMyWorkflows` keeps the
                 // section visible but makes every control in it non-interactive.
@@ -100,6 +106,160 @@ struct FlowGalleryView: View {
         }
     }
 
+    // MARK: - "Suggest a Flow" — on-device matching + draft fallback
+
+    /// Type a goal; Apple's on-device model either opens the best-matching existing flow
+    /// (gallery + My Workflows) or, when nothing genuinely fits, starts drafting a new one.
+    /// Reuses the same on-device executor CAT Flow rows already call
+    /// (`AppleFoundationExecutor.swift`) — no new model integration, no new execution path.
+    private var suggestFlowSection: some View {
+        let readiness = AppleFoundationAvailability.currentReadiness()
+        let isReady = readiness == .ready
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Suggest a Flow")
+                .font(.title3.weight(.semibold))
+            if !isReady {
+                Text(Self.suggestUnavailableMessage(readiness))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            HStack(spacing: 10) {
+                TextField("Describe what you want to do…", text: $suggestQuery)
+                    .textFieldStyle(.roundedBorder)
+                    .disabled(isSuggesting || !isReady)
+                    .onSubmit { Task { await suggestFlow() } }
+                Button {
+                    Task { await suggestFlow() }
+                } label: {
+                    if isSuggesting {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text("Suggest")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isSuggesting || !isReady
+                          || suggestQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            if let suggestError {
+                Text(suggestError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// Mirrors `RealExecutor.appleFoundationUnreadyMessage`'s reading of the same `Readiness`
+    /// enum — never invent new copy for a state that already has an owner-approved sentence
+    /// elsewhere.
+    private static func suggestUnavailableMessage(_ readiness: Readiness?) -> String {
+        switch readiness {
+        case nil: return "Apple Intelligence isn't available on this Mac."
+        case .needsSetup(let reason, _): return reason
+        case .unavailable(let reason): return reason
+        case .ready, .needsDownload: return "Apple Intelligence isn't ready."
+        }
+    }
+
+    /// One candidate the model can pick: a bundled gallery flow or a (parseable) My Workflows
+    /// flow, each carrying a unique constrained-generation tag and the navigation it opens.
+    private struct SuggestCandidate {
+        let tag: String
+        let label: String
+        let selection: FlowSelection
+    }
+
+    private func suggestCandidates() -> [SuggestCandidate] {
+        var candidates: [SuggestCandidate] = appState.galleryEntries.map { entry in
+            SuggestCandidate(tag: "gallery:\(entry.flowID)",
+                              label: "\(entry.title) — \(entry.category): \(entry.description)",
+                              selection: FlowSelection(flowID: entry.flowID))
+        }
+        // A broken user flow can't be opened as `.flow` (`openUserFlow`'s same guard, :427) —
+        // never offer it as a match.
+        candidates += appState.userFlowEntries.filter { $0.parseIssue == nil }.map { entry in
+            SuggestCandidate(tag: "user:\(entry.flowID)", label: entry.title,
+                              selection: FlowSelection(flowID: entry.flowID, isUserFlow: true))
+        }
+        return candidates
+    }
+
+    private func suggestFlow() async {
+        let query = suggestQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return }
+        suggestError = nil
+        isSuggesting = true
+        defer { isSuggesting = false }
+        guard let executor = AppleFoundationAvailability.makeExecutor() else {
+            suggestError = "Apple Intelligence isn't available on this Mac right now."
+            return
+        }
+        do {
+            let candidates = suggestCandidates()
+            if !candidates.isEmpty {
+                let numbered = candidates.enumerated()
+                    .map { "\($0.offset + 1). \($0.element.label)" }
+                    .joined(separator: "\n")
+                let instructions = """
+                You match a user's stated goal to the single existing workflow that best \
+                accomplishes it, from a numbered list. Reply with exactly one tag: the \
+                matching workflow's tag if one genuinely fits, or NONE if nothing in the \
+                list really does.
+                """
+                let prompt = "Available workflows:\n\(numbered)\n\nGoal: \(query)"
+                let picked = try await executor.generateTag(instructions: instructions, prompt: prompt,
+                                                             tags: candidates.map(\.tag) + ["NONE"])
+                if let match = candidates.first(where: { $0.tag == picked }) {
+                    appState.route.append(.flow(match.selection))
+                    suggestQuery = ""
+                    return
+                }
+            }
+            try await draftNewFlow(goal: query, executor: executor)
+            suggestQuery = ""
+        } catch {
+            suggestError = "Couldn't reach Apple Intelligence: \(error.localizedDescription)"
+        }
+    }
+
+    /// The fallback when nothing in the library fits: a fresh flow with one starting row
+    /// seeded by the model's pick from the same task vocabulary a blank flow's own step
+    /// picker offers (`FlowEditorModel.startingNodes()`, filtered like
+    /// `FlowStepPickerView.visibleSteps`), plus a short title guess. Deliberately one row,
+    /// not a full multi-row `.cat` — synthesizing a valid multi-row flow from free text
+    /// (asset chaining, per-task settings, capability declarations) is a separate, larger
+    /// feature this doesn't attempt.
+    private func draftNewFlow(goal: String, executor: any AppleFoundationExecuting) async throws {
+        let catalog = appState.browserData?.domains.flatMap { $0.allModels } ?? []
+        let startingTasks = FlowEditorModel.startingNodes().filter { task in
+            switch TaskAvailability.state(for: task, catalog: catalog,
+                                          claimableModelIDs: appState.claimableModelIDs) {
+            case .needsNewerSupport, .refusedByChannel: return false
+            case .available, .needsSetup: return true
+            }
+        }
+        var seedTaskName: String?
+        if !startingTasks.isEmpty {
+            let names = startingTasks.map(\.name)
+            let picked = try await executor.generateTag(
+                instructions: "Pick the single task that should start a new workflow for the user's goal.",
+                prompt: "Available starting tasks: \(names.joined(separator: ", "))\n\nGoal: \(goal)",
+                tags: names)
+            seedTaskName = names.contains(picked) ? picked : nil
+        }
+        let titleGuess = try? await executor.generate(
+            instructions: "Reply with only a short 2-5 word title for a workflow that does this. No punctuation, no quotes.",
+            prompt: goal)
+        let trimmed = titleGuess?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = (trimmed?.isEmpty == false && (trimmed?.count ?? 0) <= 60) ? trimmed! : "Untitled Flow"
+        appState.route.append(.editor(FlowEditTarget(flowID: UUID().uuidString, name: name,
+                                                      document: nil, savedText: nil,
+                                                      seedTaskName: seedTaskName)))
+    }
+
     // MARK: - CFM-R12-1: My Workflows
 
     private var myWorkflowsSection: some View {
@@ -116,7 +276,6 @@ struct FlowGalleryView: View {
                     Label("Import Flow", systemImage: "square.and.arrow.down")
                 }
                 .help("Copy a flow folder (.cat plus its audio, text, etc.) into My Workflows")
-                .disabled(true) //comeback
 
             }
             LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
@@ -420,7 +579,6 @@ struct FlowGalleryView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 14))
-        .disabled(true) //comeback
     }
 
     /// CFM — a click on a My Workflows flow opens it **in the editor** (Edit mode, first row

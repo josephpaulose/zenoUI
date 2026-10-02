@@ -6,7 +6,7 @@
 //  `documents` (one per line) to build a small on-disk index; omit them on later calls to
 //  search the persisted index. Backed by a locally-installed embedding model.
 //
-//  The index lives in the app container (`AI Browser/agent-index/index.json`), which is always
+//  The index lives in the app container (`Zeno UI/agent-index/index.json`), which is always
 //  writable under the sandbox — no entitlement needed. Ranking + parsing + persistence are pure
 //  helpers exercised by synchronous tests; only the embedding call itself isn't unit-tested.
 //

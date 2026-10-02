@@ -203,6 +203,53 @@
           "summary": "The mlx-community 4-bit MLX conversion of Qwen3.5-9B's language tower — a hybrid-attention (24 linear / 8 full) text model with up to 262K advertised context. The vision tower in this same download is exposed as a separate entry once install-path sharing lands (MoC-6)."
         },
         {
+          "id": "mlx-community--Qwen3.5-4B-4bit",
+          "family": "Qwen3.5",
+          "displayName": "Qwen3.5-4B",
+          "paramSize": "4B",
+          "paramCountB": 4.0,
+          "modelType": "llm",
+          "source": "mlx",
+          "format": "mlx-4bit",
+          "platforms": [
+            "macOS 13+"
+          ],
+          "minMacOSVersion": "13.0",
+          "hfRepo": "mlx-community",
+          "hfModelId": "mlx-community/Qwen3.5-4B-4bit",
+          "ramGB": 4.59,
+          "downloadSizeGB": 3.06,
+          "contextWindow": 262144,
+          "license": "apache-2.0",
+          "licenseUrl": "https://huggingface.co/Qwen/Qwen3.5-4B/blob/main/LICENSE",
+          "description": "Qwen/Qwen3.5-4B is a multimodal (text + vision + video) checkpoint — same `qwen3_5` hybrid-attention family as Qwen3.5-9B, scaled down (hidden size 2560 vs. 9B's larger width, same 32-layer / every-4th-full-attention schedule). This catalog entry is the mlx-community MLX 4-bit conversion of its **language tower only**; the download includes vision/video preprocessor configs, but this entry does not load them. Runs through MLXLLM's `qwen3_5` → `Qwen35Model` text runner, the same path already proven by the 9B and Ternary-Bonsai-27B entries.\n\nOf its 32 transformer layers, only 8 (every 4th) hold a full KV cache — the other 24 use a constant-size linear-attention (GatedDeltaNet-style) recurrent state instead, so per-token memory grows far slower than a standard 32-layer model this size would. The card advertises up to 262,144 tokens of context; how much of that a given Mac can actually hold alongside the weights depends on its available RAM.\n\nNo independent benchmark exists yet for this family in this app — speed and quality here are unmeasured, not estimated from a number. Licensed Apache-2.0, inherited from Qwen/Qwen3.5-4B.",
+          "architecture": "Qwen3_5ForConditionalGeneration",
+          "languages": null,
+          "lastUpdated": "2026-03-02",
+          "taskTags": [
+            "text-generation"
+          ],
+          "benchmarks": null,
+          "speedTokensPerSec": null,
+          "speedHardware": null,
+          "speedEstimated": true,
+          "communityDownloads": 22457,
+          "communityLikes": 9,
+          "variants": [
+            {
+              "quantization": "4-bit",
+              "format": "mlx-4bit",
+              "ramGB": 4.59,
+              "downloadSizeGB": 3.06,
+              "qualityPercent": 90,
+              "hfModelId": "mlx-community/Qwen3.5-4B-4bit",
+              "recommended": true
+            }
+          ],
+          "descriptionSource": "mlx-community/Qwen3.5-4B-4bit",
+          "summary": "The mlx-community 4-bit MLX conversion of Qwen3.5-4B's language tower — a smaller hybrid-attention (24 linear / 8 full) text model in the same family as Qwen3.5-9B, with up to 262K advertised context."
+        },
+        {
           "id": "mlx-community--gemma-3-1b-it-qat-4bit",
           "family": "gemma",
           "displayName": "gemma-3-1b-it-qat",
@@ -2514,6 +2561,54 @@
           ],
           "descriptionSource": "mlx-community/SeedVR2-3B-mlx-int8",
           "summary": "ByteDance's one-step diffusion super-resolution model (ICLR 2026) — upscale any image in a single forward pass on Apple Silicon, int8 (~4.5 GB RAM, Apache 2.0)."
+        },
+        {
+          "id": "mlx-community--RIFE-4.25",
+          "family": "RIFE",
+          "displayName": "RIFE 4.25",
+          "paramSize": "0.0057B",
+          "paramCountB": 0.00566,
+          "modelType": "interpolate",
+          "source": "mlx",
+          "format": "mlx-fp32",
+          "platforms": [
+            "macOS 14+"
+          ],
+          "minMacOSVersion": "14.0",
+          "hfRepo": "mlx-community",
+          "hfModelId": "mlx-community/RIFE-4.25",
+          "ramGB": 0.03,
+          "downloadSizeGB": 0.023,
+          "contextWindow": null,
+          "license": "mit",
+          "licenseUrl": null,
+          "description": "# RIFE 4.25 (MLX)\n\nRIFE (Real-Time Intermediate Flow Estimation) is a video frame-interpolation network: given two frames, it predicts the frame at any timestep between them. This is the `xocialize/rife-mlx` MLX port (MIT) of Practical-RIFE 4.25 — a from-scratch MLX reimplementation, no PyTorch dependency — of the `IFNet` architecture: 5 coarse-to-fine flow-estimation blocks (channels 192/128/96/64/32, scales 16/8/4/2/1) refine a bidirectional optical-flow estimate, which backward-warps both input frames and blends them through a learned mask.\n\nAt ~23 MB (fp32 safetensors, ~5.7M parameters) this is by far the smallest model in the catalog — the entire checkpoint loads and runs in a fraction of a second. This app's Run UI covers the two-still-images case (pick Frame A and Frame B, choose a timestep, get the frame between them); the upstream CLI's multi-frame video mode (`--multi`, with audio passthrough) is not implemented here.\n\n**License:** MIT (the upstream `rife-mlx` port); the original Practical-RIFE weights carry their own research license from `hzwer/Practical-RIFE`.",
+          "architecture": "IFNet",
+          "languages": null,
+          "lastUpdated": "2026-03-01",
+          "taskTags": [
+            "frame-interpolation",
+            "video-frame-interpolation"
+          ],
+          "benchmarks": null,
+          "speedTokensPerSec": null,
+          "speedHardware": null,
+          "speedEstimated": null,
+          "communityDownloads": 0,
+          "communityLikes": 0,
+          "variants": [
+            {
+              "quantization": "fp32",
+              "format": "mlx-fp32",
+              "ramGB": 0.03,
+              "downloadSizeGB": 0.023,
+              "qualityPercent": 90,
+              "hfModelId": "mlx-community/RIFE-4.25",
+              "recommended": true
+            }
+          ],
+          "descriptionSource": "mlx-community/RIFE-4.25",
+          "summary": "A tiny (~23 MB) MLX port of RIFE 4.25 — given two frames, predicts the frame at any timestep between them via coarse-to-fine optical flow + learned blend masking."
         }
       ]
     }

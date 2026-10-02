@@ -1,4 +1,4 @@
-# MLXUI &middot; Local AI Browser
+# Zeno UI &middot; Local AI Browser
 
 *Run MLX models visually — no terminal, no Python, no command-line flags.*
 
@@ -7,11 +7,11 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-required-333333)](https://developer.apple.com/macos/)
 
-<a href="https://apps.apple.com/us/app/mlxui-local-llm-ai-browser/id6787626220">
-  <img src="https://tools.applemediaservices.com/api/badges/download-on-the-mac-app-store/black/en-us?size=250x83" alt="Download on the Mac App Store" height="60">
-</a>
+Zeno UI is a fork of [MLXUI](https://github.com/Misfits-Rebels-Outcasts/MLXUI), under its
+original MIT license (see `LICENSE`).
+<!-- TODO: add a Mac App Store / download badge once Zeno UI has its own listing -->
 
-MLXUI is the **SwiftUI user interface layer for MLX models** — a native macOS app built on
+Zeno UI is the **SwiftUI user interface layer for MLX models** — a native macOS app built on
 [`mlx-swift`](https://github.com/ml-explore/mlx-swift) that lets you browse, install, and
 run local AI models on Apple Silicon. It ships a curated catalog of MLX-optimized models
 from Hugging Face's [`mlx-community`](https://huggingface.co/mlx-community), downloads
@@ -31,12 +31,12 @@ There are thousands of MLX models on Hugging Face. Using them today means findin
 right repo, reading the README, managing Python dependencies, figuring out CLI flags,
 and converting formats when things don't match.
 
-MLXUI replaces all of that with a single app. Browse by category (Chat & Text, Vision,
+Zeno UI replaces all of that with a single app. Browse by category (Chat & Text, Vision,
 OCR, Speech-to-Text, Text-to-Speech, Embeddings), filter by what fits your hardware,
 install with a click, and run each model in a purpose-built interface — chat for LLMs,
 a microphone and transcript for ASR, a voice picker for TTS, an image dropwell for OCR.
 
-Under the hood, MLXUI wraps Apple's `mlx-swift` and `mlx-libraries` (MLXLLM, MLXVLM,
+Under the hood, Zeno UI wraps Apple's `mlx-swift` and `mlx-libraries` (MLXLLM, MLXVLM,
 MLXWhisper, MLXAudioTTS, etc.) in a modular SwiftUI architecture. Each model type gets
 its own isolated module folder — updating Whisper never touches Kokoro, and a
 contributor adding image-generation support doesn't need to understand the chat pipeline.
@@ -57,7 +57,7 @@ contributor adding image-generation support doesn't need to understand the chat 
 
 ### What is mlx-workflow?
 
-A readable AI workflow you can run locally — and MLXUI now runs it natively.
+A readable AI workflow you can run locally — and Zeno UI now runs it natively.
 
 ```
 1. Read Audio   client-call.m4a
@@ -81,14 +81,8 @@ It all runs on your own Mac, so your files stay put and running it costs nothing
 frontier agents for the thinking and the one-off stuff. When something becomes a weekly habit,
 move it here and it becomes a button you press.
 
-MLXUI runs these readable `.cat` workflows through its **Pipeline Runner**, so the models you
+Zeno UI runs these readable `.cat` workflows through its **Pipeline Runner**, so the models you
 install in the catalog are the same models your workflows use — no separate setup.
-
-![AI Workflow](https://www.connectcode.net/neoimages/ai-workflow.png)
-
-<a href="https://www.connectcode.net/mlx-workflow.html">
-  <img src="https://img.shields.io/badge/Learn%20more-mlx--workflow-blue?style=for-the-badge" alt="Learn more about mlx-workflow">
-</a>
 
 ---
 
@@ -317,7 +311,7 @@ and Run UIs are added with every release.
 
 ## Architecture
 
-MLXUI uses a **module system** where each model type lives in its own isolated folder.
+Zeno UI uses a **module system** where each model type lives in its own isolated folder.
 Adding a new model type touches only that model's folder — updating Whisper never
 touches Kokoro, and a contributor adding image-generation support doesn't need to
 understand the chat pipeline.
@@ -354,9 +348,9 @@ storage layout, and engine-to-model dispatch.
 ### Build
 
 ```bash
-git clone https://github.com/your-org/MLXUI.git
+git clone https://github.com/josephpaulose/MLXUI.git
 cd MLXUI
-open PipelineStudio.xcodeproj
+open MLXUI.xcodeproj
 ```
 
 Two schemes are available:

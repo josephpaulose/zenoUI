@@ -35,7 +35,7 @@ nonisolated struct ProcessShell: ShellCapability {
     }
 
     private static let queue = DispatchQueue(
-        label: "net.connectcode.mlxui.shell",
+        label: "in.net.zeno.zenoui.shell",
         qos: .userInitiated,
         attributes: .concurrent
     )

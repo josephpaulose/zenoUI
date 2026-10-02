@@ -5,7 +5,7 @@ import Foundation
 /// corrections live in `ModelEntry.runnerKind` below — the single source of truth.
 /// See `Design/pipeline-stage-sketch.md` §routing.
 nonisolated enum RunnerKind: String, Sendable {
-    case llm, asr, tts, vision, embedding, ocr, image, music, segmentation, video, upscale, rerank, decision, unsupported
+    case llm, asr, tts, vision, embedding, ocr, image, music, segmentation, video, upscale, rerank, decision, interpolate, unsupported
 }
 
 nonisolated extension ModelEntry {
@@ -32,6 +32,7 @@ nonisolated extension ModelEntry {
         case .upscale:       return .upscale         // image → upscaled image (diffusion); engine lives in Modules/SeedVR2
         case .rerank:        return .rerank          // [text] + query → [text], reordered; engine lives in Modules/Rerank (MoC-4)
         case .decision:      return .decision        // text + typed question → label + probabilities; engine lives in Modules/Laya
+        case .interpolate:   return .interpolate      // two images + timestep → in-between frame; engine lives in Modules/RIFE
         }
     }
 }

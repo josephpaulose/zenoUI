@@ -56,9 +56,22 @@ struct BrowseView: View {
         }
     }
 
+    /// Infrastructure is where a runnable-but-not-`browser.json` model belongs, per the
+    /// user's own expectation: every model MLXUI can run should show up somewhere in
+    /// Browse, not only behind the standalone "Ollama" sidebar destination. Scoped to that
+    /// one section (never Chat & Text etc.) — Infrastructure already mixes non-LLM utility
+    /// models (Embedding, Rerank), so an externally-served chat model fits the same "extra
+    /// capability, not a browser.json download" shape.
+    private var showsOllamaSection: Bool {
+        if case .browse("infrastructure") = appState.selectedSection {
+            return appState.ollama.reachable && !appState.ollama.models.isEmpty
+        }
+        return false
+    }
+
     private var modelList: some View {
         Group {
-            if appState.filteredModels.isEmpty {
+            if appState.filteredModels.isEmpty, !showsOllamaSection {
                 emptyState
             } else {
                 ScrollView {
@@ -80,12 +93,38 @@ struct BrowseView: View {
                                 sectionHeader(group)
                             }
                         }
+                        if showsOllamaSection {
+                            Section {
+                                ForEach(appState.ollama.models) { model in
+                                    OllamaModelCard(model: model)
+                                }
+                            } header: {
+                                ollamaSectionHeader
+                            }
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
                 }
             }
         }
+    }
+
+    private var ollamaSectionHeader: some View {
+        HStack {
+            Image(systemName: "server.rack")
+                .foregroundStyle(.secondary)
+            Text("Ollama (local)")
+                .font(.headline)
+            Text("(\(appState.ollama.models.count))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.bar)
     }
 
     private var emptyState: some View {

@@ -34,6 +34,23 @@ struct SidebarView: View {
                 }
             }
 
+            Section("Local Servers") {
+                Label {
+                    HStack {
+                        Text("Ollama")
+                        Spacer()
+                        if appState.ollama.reachable, !appState.ollama.models.isEmpty {
+                            Text("\(appState.ollama.models.count)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } icon: {
+                    Image(systemName: "server.rack")
+                }
+                .tag(SidebarItem.ollama)
+            }
+
             Section("Installed") {
                 if appState.installedModelIDs.isEmpty {
                     Label("None installed", systemImage: "tray")

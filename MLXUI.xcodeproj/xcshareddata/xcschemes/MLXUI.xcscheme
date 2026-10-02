@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "207EF2A22FEB616500A0AC5F"
-               BuildableName = "MLXUI.app"
+               BuildableName = "Zeno UI.app"
                BlueprintName = "MLXUI"
                ReferencedContainer = "container:MLXUI.xcodeproj">
             </BuildableReference>
@@ -73,7 +73,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "207EF2A22FEB616500A0AC5F"
-            BuildableName = "MLXUI.app"
+            BuildableName = "Zeno UI.app"
             BlueprintName = "MLXUI"
             ReferencedContainer = "container:MLXUI.xcodeproj">
          </BuildableReference>
@@ -90,7 +90,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "207EF2A22FEB616500A0AC5F"
-            BuildableName = "MLXUI.app"
+            BuildableName = "Zeno UI.app"
             BlueprintName = "MLXUI"
             ReferencedContainer = "container:MLXUI.xcodeproj">
          </BuildableReference>

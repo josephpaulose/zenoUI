@@ -72,9 +72,9 @@ struct PrivacyView: View {
     /// edition's are not).
     private var editionLine: String {
         #if DIRECT_BUILD
-        "AI Browser Pro — Developer ID, notarized, no App Sandbox (Hardened Runtime only)."
+        "Zeno UI Pro — Developer ID, notarized, no App Sandbox (Hardened Runtime only)."
         #else
-        "AI Browser — Mac App Store, sandboxed."
+        "Zeno UI — Mac App Store, sandboxed."
         #endif
     }
 }

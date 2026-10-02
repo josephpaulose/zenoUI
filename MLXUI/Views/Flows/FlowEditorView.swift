@@ -35,7 +35,7 @@ struct FlowEditorView: View {
 
     init(flowID: String = UUID().uuidString, name: String = "Untitled Flow",
          document: FlowDocument? = nil, savedText: String? = nil,
-         workspace: WorkspaceRef? = nil, fileURL: URL? = nil) {
+         workspace: WorkspaceRef? = nil, fileURL: URL? = nil, seedTaskName: String? = nil) {
         self.workspaceRef = workspace
         // KW-1-1: a workspace flow opened from disk (a `WorkspaceRef` naming an existing
         // document) already has a file at `workspace.fileURL` — seed `savedURL` so a rename's
@@ -45,13 +45,22 @@ struct FlowEditorView: View {
         // equivalent — `fileURL` is the caller's own on-disk URL for a non-workspace flow that
         // already exists (opening it from My Workflows, or a just-written Duplicate & Edit /
         // Edit-opened-copy) — falls back only when there's no workspace ref to seed from.
-        _model = State(initialValue: FlowEditorModel(
+        let model = FlowEditorModel(
             name: workspace?.flowStem ?? name,
             flowID: workspace?.workspaceID ?? flowID,
             document: document,
             workspace: workspace?.workspace ?? .shared,
             savedText: savedText,
-            savedURL: FlowEditorModel.seedSavedURL(document: document, workspace: workspace, fileURL: fileURL)))
+            savedURL: FlowEditorModel.seedSavedURL(document: document, workspace: workspace, fileURL: fileURL))
+        // "Suggest a Flow" (AI Workflows page): a brand-new blank flow can arrive with a task
+        // already chosen by the on-device model. Seed it via the exact call the step picker's
+        // own `onPick` makes, so default-model/settings-filling logic isn't duplicated. Only
+        // for a genuinely blank flow — `document == nil` implies `model.document.rows` starts
+        // empty, so there's nothing this could clobber.
+        if document == nil, let seedTaskName {
+            model.add(task: seedTaskName)
+        }
+        _model = State(initialValue: model)
     }
 
     /// The run scope for this flow — workspace-rooted when it lives in one (CFM-R17-1).

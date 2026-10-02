@@ -2,14 +2,14 @@
 //  ModelStore.swift
 //  MLXUI — the single source of truth for on-disk locations.
 //
-//  Seventeen call sites used to rebuild `Application Support/AI Browser/…` by
+//  Seventeen call sites used to rebuild `Application Support/Zeno UI/…` by
 //  hand, each with its own `first!` force-unwrap and its own spelling of the
 //  layout. That was survivable while there was one app; it isn't now, because
 //  the expression resolves to *different places* in the two editions:
 //
-//    App Store (sandboxed) …/Library/Containers/net.connectcode.mlxui/Data/
-//                             Library/Application Support/AI Browser/
-//    Direct (un-sandboxed)  ~/Library/Application Support/AI Browser/
+//    App Store (sandboxed) …/Library/Containers/in.net.zeno.zenoui/Data/
+//                             Library/Application Support/Zeno UI/
+//    Direct (un-sandboxed)  ~/Library/Application Support/Zeno UI/
 //
 //  One type means the Direct edition's "adopt the App Store container if it
 //  exists, instead of re-downloading 30 GB of weights" behaviour is a single
@@ -32,9 +32,9 @@ nonisolated struct ModelStore: Sendable {
     /// for the direct edition's container-adoption override.
     static let shared = ModelStore()
 
-    static let folderName = "AI Browser"
+    static let folderName = "Zeno UI"
 
-    /// `…/Application Support/AI Browser`.
+    /// `…/Application Support/Zeno UI`.
     let baseDirectory: URL
 
     init(baseDirectory: URL? = nil) {

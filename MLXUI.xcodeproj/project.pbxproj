@@ -36,11 +36,29 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2032035B301B7DB30003B32E /* MLXUI Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MLXUI Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2032035B301B7DB30003B32E /* Zeno UI Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Zeno UI Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2041A3A12FECB7DD0090F7DA /* MLXUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MLXUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		207EF2A32FEB616500A0AC5F /* MLXUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MLXUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		207EF2A32FEB616500A0AC5F /* Zeno UI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Zeno UI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		20AACD862FEBC5AA0098B372 /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
+		D80C0CA9306AA05F00D37B7A /* MLXUI-Direct-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MLXUI-Direct-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D80C0CAA306AA05F00D37B7A /* Exceptions for "MLXUI" folder in "MLXUI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 207EF2A22FEB616500A0AC5F /* MLXUI */;
+		};
+		D80C0CAB306AA05F00D37B7A /* Exceptions for "MLXUI" folder in "MLXUI-Direct" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 20320340301B7DB30003B32E /* MLXUI-Direct */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2041A3A22FECB7DD0090F7DA /* MLXUITests */ = {
@@ -50,6 +68,10 @@
 		};
 		207EF2A52FEB616500A0AC5F /* MLXUI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D80C0CAA306AA05F00D37B7A /* Exceptions for "MLXUI" folder in "MLXUI" target */,
+				D80C0CAB306AA05F00D37B7A /* Exceptions for "MLXUI" folder in "MLXUI-Direct" target */,
+			);
 			path = MLXUI;
 			sourceTree = "<group>";
 		};
@@ -126,6 +148,7 @@
 		207EF29A2FEB616500A0AC5F = {
 			isa = PBXGroup;
 			children = (
+				D80C0CA9306AA05F00D37B7A /* MLXUI-Direct-Info.plist */,
 				2098BCB2301B850B00CA4BBC /* Config */,
 				2098BCAB301B835900CA4BBC /* Apps */,
 				2087814E2FECF603004B3FBE /* RSI */,
@@ -141,9 +164,9 @@
 		207EF2A42FEB616500A0AC5F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				207EF2A32FEB616500A0AC5F /* MLXUI.app */,
+				207EF2A32FEB616500A0AC5F /* Zeno UI.app */,
 				2041A3A12FECB7DD0090F7DA /* MLXUITests.xctest */,
-				2032035B301B7DB30003B32E /* MLXUI Pro.app */,
+				2032035B301B7DB30003B32E /* Zeno UI Pro.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -179,7 +202,7 @@
 				2032034C301B7DB30003B32E /* PaddleOCRVL */,
 			);
 			productName = MLXUI;
-			productReference = 2032035B301B7DB30003B32E /* MLXUI Pro.app */;
+			productReference = 2032035B301B7DB30003B32E /* Zeno UI Pro.app */;
 			productType = "com.apple.product-type.application";
 		};
 		2041A3A02FECB7DD0090F7DA /* MLXUITests */ = {
@@ -230,7 +253,7 @@
 				20F5D7BE2FF61BCF005F7423 /* PaddleOCRVL */,
 			);
 			productName = MLXUI;
-			productReference = 207EF2A32FEB616500A0AC5F /* MLXUI.app */;
+			productReference = 207EF2A32FEB616500A0AC5F /* Zeno UI.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -344,6 +367,13 @@
 			buildSettings = {
 				CURRENT_PROJECT_VERSION = 20;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 59F637SRRA;
+				INFOPLIST_FILE = "MLXUI-Direct-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Zeno UI Pro needs access to your Desktop so local models and agent tools can read and write files you point them at.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Zeno UI Pro needs access to your Documents folder so local models and agent tools can read and write files you point them at.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Zeno UI Pro needs access to your Downloads folder so local models and agent tools can read and write files you point them at.";
+				INFOPLIST_KEY_NSRemovableVolumesUsageDescription = "Zeno UI Pro needs access to removable volumes so you can keep model weights on an external drive.";
 				MARKETING_VERSION = 0.19;
 			};
 			name = Debug;
@@ -355,6 +385,13 @@
 			buildSettings = {
 				CURRENT_PROJECT_VERSION = 20;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 59F637SRRA;
+				INFOPLIST_FILE = "MLXUI-Direct-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Zeno UI Pro needs access to your Desktop so local models and agent tools can read and write files you point them at.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Zeno UI Pro needs access to your Documents folder so local models and agent tools can read and write files you point them at.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Zeno UI Pro needs access to your Downloads folder so local models and agent tools can read and write files you point them at.";
+				INFOPLIST_KEY_NSRemovableVolumesUsageDescription = "Zeno UI Pro needs access to removable volumes so you can keep model weights on an external drive.";
 				MARKETING_VERSION = 0.19;
 			};
 			name = Release;
@@ -366,11 +403,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = B93L2R82PL;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ConnectCode.MLXUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = in.net.zeno.zenoui.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -389,11 +425,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = B93L2R82PL;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ConnectCode.MLXUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = in.net.zeno.zenoui.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -530,8 +565,11 @@
 			baseConfigurationReferenceAnchor = 2098BCB2301B850B00CA4BBC /* Config */;
 			baseConfigurationReferenceRelativePath = AppStore.xcconfig;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CURRENT_PROJECT_VERSION = 20;
 				DEAD_CODE_STRIPPING = YES;
+				INFOPLIST_FILE = MLXUI/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				MARKETING_VERSION = 0.19;
 			};
 			name = Debug;
@@ -541,8 +579,11 @@
 			baseConfigurationReferenceAnchor = 2098BCB2301B850B00CA4BBC /* Config */;
 			baseConfigurationReferenceRelativePath = AppStore.xcconfig;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CURRENT_PROJECT_VERSION = 20;
 				DEAD_CODE_STRIPPING = YES;
+				INFOPLIST_FILE = MLXUI/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				MARKETING_VERSION = 0.19;
 			};
 			name = Release;

@@ -44,7 +44,7 @@ nonisolated enum NetTools {
         var request = URLRequest(url: url, timeoutInterval: timeout)
         request.httpMethod = method
         request.httpBody = body
-        var merged = ["User-Agent": "AI Browser/1.0"]
+        var merged = ["User-Agent": "Zeno UI/1.0"]
         for (k, v) in headers { merged[k] = v }
         request.allHTTPHeaderFields = merged
 

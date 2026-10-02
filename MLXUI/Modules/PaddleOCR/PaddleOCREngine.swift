@@ -10,7 +10,7 @@ import PaddleOCRVL
 /// Isolates the `PaddleOCRVL` import to this one file (mirrors `VLMEngine`'s `MLXVLM` isolation).
 enum PaddleOCREngine {
     /// The installed-model directory for a catalog id, mirroring `InstallManager`'s layout
-    /// (`Application Support/AI Browser/models/{id}`) — same as `VLMEngine`.
+    /// (`Application Support/Zeno UI/models/{id}`) — same as `VLMEngine`.
     nonisolated static func installedModelDirectory(id: String) -> URL {
         ModelStore.shared.directory(forModelID: id)
     }

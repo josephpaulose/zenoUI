@@ -18,6 +18,8 @@ struct ContentView: View {
                         HomeView()
                     } else if case .aiWorkflows = appState.selectedSection {
                         FlowGalleryView()
+                    } else if case .ollama = appState.selectedSection {
+                        OllamaListView()
                     } else {
                         BrowseView()
                     }

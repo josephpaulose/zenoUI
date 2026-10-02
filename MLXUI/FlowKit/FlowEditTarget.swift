@@ -19,6 +19,11 @@ nonisolated struct FlowEditTarget: Hashable, Identifiable {
     /// the plain-flow equivalent KW-1-1 only wired for workspace flows. nil for a brand-new
     /// flow that has never been written.
     var fileURL: URL? = nil
+    /// "Suggest a Flow" (AI Workflows page) — a task name to seed as the new flow's first row,
+    /// via the same `FlowEditorModel.add(task:)` the step picker itself calls. Only meaningful
+    /// alongside a nil `document` (a brand-new blank flow); ignored otherwise. Excluded from
+    /// identity like `document`, for the same reason.
+    var seedTaskName: String? = nil
 
     var id: String {
         if let workspace { return "w-\(workspace.workspaceID)/\(workspace.flowFile)" }

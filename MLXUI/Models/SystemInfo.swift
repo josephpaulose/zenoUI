@@ -10,7 +10,9 @@ nonisolated struct SystemInfo {
 
     static func detect() -> SystemInfo {
         let memSize = ProcessInfo.processInfo.physicalMemory
-        let totalRAM = Double(memSize) / 1_000_000_000.0
+        // Physical memory is reported in binary GiB (labeled "GB") to match system_profiler /
+        // System Settings — unlike storage, which macOS reports in decimal GB.
+        let totalRAM = Double(memSize) / 1_073_741_824.0
 
         let osVersion = ProcessInfo.processInfo.operatingSystemVersion
         let osStr = "\(osVersion.majorVersion).\(osVersion.minorVersion)"
@@ -42,6 +44,14 @@ nonisolated struct SystemInfo {
     }
 
     private static func detectChip(modelIdentifier: String) -> String {
+        // Prefer the live CPU brand string: some model identifiers (e.g. Mac16,7, shared by
+        // both the M4 Pro and M4 Max 16" MacBook Pro configs) do not uniquely determine the
+        // chip tier, so a table keyed on hw.model alone cannot disambiguate them correctly.
+        if let brand = cpuBrandString(), brand.hasPrefix("Apple ") {
+            return String(brand.dropFirst("Apple ".count))
+        }
+
+        // Fallback for the rare case the sysctl above is unavailable.
         let map: [String: String] = [
             "Mac16,7": "M4 Max", "Mac16,8": "M4 Max", "Mac16,9": "M4 Max",
             "Mac16,10": "M4 Pro", "Mac16,11": "M4 Pro",
@@ -56,6 +66,15 @@ nonisolated struct SystemInfo {
             "Mac14,3": "M2 Pro", "Mac14,4": "M2 Pro",
         ]
         return map[modelIdentifier] ?? "Apple Silicon"
+    }
+
+    private static func cpuBrandString() -> String? {
+        var size: size_t = 0
+        sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+        guard size > 0 else { return nil }
+        var buffer = [CChar](repeating: 0, count: size)
+        sysctlbyname("machdep.cpu.brand_string", &buffer, &size, nil, 0)
+        return String(cString: buffer)
     }
 
     private static func chipBandwidth(_ chip: String) -> Double {

@@ -71,7 +71,7 @@ struct ModelStoreRepoKeyingTests {
     /// Confirms the refactor: `InstallManager` no longer builds `models/{id}/...` paths
     /// itself — a marker written where `ModelStore` says the model lives is what
     /// `isInstalled`/`loadInstalled` actually check, using the injectable `store` (MoC-5-1),
-    /// not the real `Application Support/AI Browser/`.
+    /// not the real `Application Support/Zeno UI/`.
     ///
     /// **MoC-5-FIX-1: this test cannot catch the card-keyed-read-path defect.** It uses a
     /// card whose `id` equals its own repo slug (`hfModelId` = `mlx-community/Test-Model-4bit`

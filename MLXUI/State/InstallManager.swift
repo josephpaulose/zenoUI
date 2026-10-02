@@ -23,7 +23,7 @@ enum InstallState: Equatable {
 @Observable
 final class InstallManager {
     /// MoC-5-1: injectable so tests can point storage at a temp directory rather than the
-    /// real `Application Support/AI Browser/`. `ModelStore` stays the one place per-model
+    /// real `Application Support/Zeno UI/`. `ModelStore` stays the one place per-model
     /// paths are built — every path below routes through it, never hand-rolled here.
     private let store: ModelStore
     private let modelsDir: URL
@@ -388,6 +388,149 @@ final class InstallManager {
                 downloadTasksByRepo[repo] = nil
             }
         }
+    }
+
+    // MARK: - Import from a local HF cache
+
+    /// Adopts a model already sitting on disk — downloaded by `huggingface-cli`, git-lfs, or
+    /// any other tool into the standard `~/.cache/huggingface/hub/` layout — into the app's
+    /// own store, without re-fetching a byte over the network. `sourceURL` is whatever the
+    /// user picked in the `NSOpenPanel` (`AppState.presentImportLocalPanel`): either a
+    /// `models--org--name` cache folder (its newest `snapshots/<rev>` is used) or a snapshot
+    /// folder directly. Drives the same `modelStates` the download path does, so every
+    /// existing UI branch (`.resolving`/`.verifying`/`.installed`/`.error`, `cancel(_:)`)
+    /// applies unchanged.
+    func importLocal(_ model: ModelEntry, from sourceURL: URL, onComplete: @escaping (String) -> Void = { _ in }) {
+        let repo = ModelStore.repoSlug(for: model.hfModelId)
+        cardIDsByRepo[repo, default: []].insert(model.id)
+
+        guard sourceURL.startAccessingSecurityScopedResource() else {
+            setState(.error("Couldn't access the selected folder.", canRetry: false), forRepo: repo)
+            return
+        }
+
+        setState(.resolving, forRepo: repo)
+        let task = Task { await runImportLocal(model, repo: repo, sourceURL: sourceURL, onComplete: onComplete) }
+        downloadTasksByRepo[repo] = task
+    }
+
+    private func runImportLocal(
+        _ model: ModelEntry, repo: String, sourceURL: URL, onComplete: @escaping (String) -> Void
+    ) async {
+        defer { sourceURL.stopAccessingSecurityScopedResource() }
+        let hfModelId = model.hfModelId
+
+        do {
+            guard !Task.isCancelled else { return }
+            let contentRoot = try resolveImportContentRoot(sourceURL)
+            let relativePaths = try enumerateRelativeFiles(under: contentRoot)
+            guard !relativePaths.isEmpty else {
+                throw InstallError.downloadFailed("That folder has no files in it.")
+            }
+
+            // Same pure selection logic a real download uses — a folder with extra files
+            // (docs, `.gitattributes`, a redundant fp32 twin) doesn't pull in more than an
+            // actual install would.
+            let needed = ModelFileSelector.filesToDownload(siblings: relativePaths)
+            guard !needed.isEmpty else {
+                throw InstallError.downloadFailed("No recognized model files found in that folder.")
+            }
+
+            await MainActor.run { setState(.verifying, forRepo: repo) }
+
+            // Stage into the same scratch directory a download uses, then move atomically —
+            // a failure partway through never leaves a half-written model directory behind.
+            let stagingDir = store.downloadDirectory(forHFModelID: hfModelId)
+            if FileManager.default.fileExists(atPath: stagingDir.path) {
+                try FileManager.default.removeItem(at: stagingDir)
+            }
+            try FileManager.default.createDirectory(at: stagingDir, withIntermediateDirectories: true)
+
+            for relativePath in needed {
+                guard !Task.isCancelled else { return }
+                let source = contentRoot.appendingPathComponent(relativePath)
+                let destination = stagingDir.appendingPathComponent(relativePath)
+                try FileManager.default.createDirectory(
+                    at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+                // `Data(contentsOf:)` reads through a symlink to its target — which is
+                // exactly HF's cache layout (`snapshots/<rev>/file` → `../../blobs/<hash>`) —
+                // so the copy lands as real bytes, independent of the cache afterward.
+                let data = try Data(contentsOf: source)
+                try data.write(to: destination)
+            }
+
+            let modelDir = store.directory(forHFModelID: hfModelId)
+            if FileManager.default.fileExists(atPath: modelDir.path) {
+                try FileManager.default.removeItem(at: modelDir)
+            }
+            try FileManager.default.copyItem(at: stagingDir, to: modelDir)
+            try FileManager.default.removeItem(at: stagingDir)
+            FileManager.default.createFile(
+                atPath: store.installedMarker(forHFModelID: hfModelId).path, contents: nil)
+
+            print("[Install] Imported local copy: \(model.displayName) ← \(sourceURL.path)")
+            await MainActor.run {
+                setState(.installed, forRepo: repo)
+                downloadTasksByRepo[repo] = nil
+                for cardID in cardIDsByRepo[repo] ?? [model.id] {
+                    onComplete(cardID)
+                }
+            }
+        } catch {
+            if Task.isCancelled { return }
+            print("[Install] Import failed: \(error.localizedDescription)")
+            await MainActor.run {
+                setState(.error(error.localizedDescription, canRetry: false), forRepo: repo)
+                downloadTasksByRepo[repo] = nil
+            }
+        }
+    }
+
+    /// A folder shaped like HF's own cache entry (`models--org--name`, holding a
+    /// `snapshots/` directory) resolves to its most-recently-modified snapshot; anything
+    /// else — a snapshot folder picked directly, or a flat folder of model files — is used
+    /// as-is.
+    private func resolveImportContentRoot(_ url: URL) throws -> URL {
+        let snapshotsDir = url.appendingPathComponent("snapshots", isDirectory: true)
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: snapshotsDir.path, isDirectory: &isDir),
+              isDir.boolValue else {
+            return url
+        }
+        let revisions = try FileManager.default.contentsOfDirectory(
+            at: snapshotsDir, includingPropertiesForKeys: [.contentModificationDateKey])
+        guard let newest = revisions.max(by: {
+            let d0 = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            let d1 = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]))?
+                .contentModificationDate ?? .distantPast
+            return d0 < d1
+        }) else {
+            throw InstallError.downloadFailed("No snapshot found under \(snapshotsDir.path).")
+        }
+        return newest
+    }
+
+    /// Recursively lists every regular file under `root` as `/`-joined paths relative to
+    /// it — the same shape `ModelFileSelector` expects for HF API siblings.
+    private func enumerateRelativeFiles(under root: URL) throws -> [String] {
+        guard let enumerator = FileManager.default.enumerator(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else { return [] }
+        var results: [String] = []
+        let rootPath = root.standardizedFileURL.path
+        for case let fileURL as URL in enumerator {
+            let isDir = (try? fileURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
+            guard !isDir else { continue }
+            let path = fileURL.standardizedFileURL.path
+            guard path.hasPrefix(rootPath) else { continue }
+            var relative = String(path.dropFirst(rootPath.count))
+            if relative.hasPrefix("/") { relative.removeFirst() }
+            results.append(relative)
+        }
+        return results
     }
 
     private func buildDownloadURL(model: String, filename: String) -> URL? {
